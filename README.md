@@ -9,11 +9,7 @@
 
 ## Quick Start
 
-Install this Skill in your Agent framework:
-
-```text
-https://github.com/inhai-wiki/video-highlight-skill.git
-```
+Read this page and install this skill: [inhai-wiki/video-highlight-skill.git](https://github.com/inhai-wiki/video-highlight-skill.git)
 
 Then give your Agent a video:
 
