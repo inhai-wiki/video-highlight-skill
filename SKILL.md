@@ -9,17 +9,19 @@ Use this skill to convert a long video into a structured content product: highli
 
 ## Workflow
 
+Before running commands, locate the skill directory that contains this `SKILL.md`. Call that path `<skill_dir>`. The helper script must exist at `<skill_dir>/scripts/video_highlight.py`. If `scripts/video_highlight.py` is missing, the skill installation is incomplete; reinstall or clone the full repository before continuing.
+
 1. Create a work directory.
-   - Run `scripts/video_highlight.py init-project --output <workdir> --scenario <highlight|meeting|course|live|report>`.
+   - Run `python3 <skill_dir>/scripts/video_highlight.py init-project --output <workdir> --scenario <highlight|meeting|course|live|report>`.
    - Keep all generated files in that work directory.
 
 2. Inspect the source video.
-   - Run `scripts/video_highlight.py probe <video> --output <workdir>/metadata.json`.
+   - Run `python3 <skill_dir>/scripts/video_highlight.py probe <video> --output <workdir>/metadata.json`.
    - Use duration, dimensions, and stream metadata to choose frame sampling and clip limits.
 
 3. Extract analysis inputs.
-   - Run `scripts/video_highlight.py extract-audio <video> --output <workdir>/audio.wav` for transcription.
-   - Run `scripts/video_highlight.py sample-frames <video> --output-dir <workdir>/frames --interval 30` for visual review.
+   - Run `python3 <skill_dir>/scripts/video_highlight.py extract-audio <video> --output <workdir>/audio.wav` for transcription.
+   - Run `python3 <skill_dir>/scripts/video_highlight.py sample-frames <video> --output-dir <workdir>/frames --interval 30` for visual review.
    - Lower `--interval` to 5-15 seconds for sports, demos, UI walkthroughs, or visually dense videos.
 
 4. Build a timestamped index.
@@ -36,15 +38,15 @@ Use this skill to convert a long video into a structured content product: highli
 
 6. Validate the model plan.
    - Save the model output to `<workdir>/clip_plan.json`.
-   - Run `scripts/video_highlight.py validate-plan <workdir>/clip_plan.json`.
+   - Run `python3 <skill_dir>/scripts/video_highlight.py validate-plan <workdir>/clip_plan.json`.
    - Fix invalid times, overlapping clips, missing titles, or clips shorter than 3 seconds.
 
 7. Cut clips and generate subtitles.
-   - Run `scripts/video_highlight.py cut <video> --plan <workdir>/clip_plan.json --output-dir <workdir>/clips`.
+   - Run `python3 <skill_dir>/scripts/video_highlight.py cut <video> --plan <workdir>/clip_plan.json --output-dir <workdir>/clips`.
    - The script writes MP4 clips plus sidecar SRT files when subtitle entries are present.
 
 8. Generate a recap page.
-   - Run `scripts/video_highlight.py page --plan <workdir>/clip_plan.json --clips-dir <workdir>/clips --source-video <video> --copy-media --output <workdir>/site/index.html`.
+   - Run `python3 <skill_dir>/scripts/video_highlight.py page --plan <workdir>/clip_plan.json --clips-dir <workdir>/clips --source-video <video> --copy-media --output <workdir>/site/index.html`.
    - The page uses a watch layout: main player on the left, scrollable highlight playlist with video previews on the right, and current clip details under the player.
    - Return `<workdir>/site/index.html`, generated clips, and any limitations.
 
@@ -78,7 +80,7 @@ Use seconds for `start` and `end` when possible. `HH:MM:SS` strings are accepted
 Run:
 
 ```bash
-python3 video-highlight-skill/scripts/video_highlight.py --help
+python3 <skill_dir>/scripts/video_highlight.py --help
 ```
 
 Main commands:
@@ -98,7 +100,7 @@ Use `--source-video` and `--copy-media` when the user wants a page that can be h
 Recommended command:
 
 ```bash
-python3 video-highlight-skill/scripts/video_highlight.py page \
+python3 <skill_dir>/scripts/video_highlight.py page \
   --plan <workdir>/clip_plan.json \
   --clips-dir <workdir>/clips \
   --source-video <video> \
