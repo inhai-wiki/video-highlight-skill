@@ -38,11 +38,9 @@ Example: a 20-second product video is split into 3 highlight clips.
 ### Original input video
 
 <p align="center">
-  <a href="examples/demo-input/original-product-video.mp4">
-    <img src="examples/demo-input/original-product-video.gif" alt="Original product video input demo" width="260" />
-  </a>
+  <video src="examples/demo-input/original-product-video.mp4" controls muted playsinline width="260"></video>
   <br />
-  <sub>20-second source video. Click the preview to open the MP4.</sub>
+  <sub>20-second source video used as the Agent input.</sub>
 </p>
 
 ### Highlight clips
