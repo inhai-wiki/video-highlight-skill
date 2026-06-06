@@ -114,10 +114,6 @@ Full schema: [references/analysis-schema.md](references/analysis-schema.md)
 
 Speech transcription and multimodal understanding can be provided by your Agent framework.
 
-## SEO Keywords
-
-`ai video highlight`, `video clipping agent`, `claude code skill`, `codex skill`, `openclaw skill`, `ffmpeg video clipping`, `long video summarization`, `meeting recording analysis`, `youtube style recap page`, `ai highlight reel`
-
 ## License
 
 MIT
