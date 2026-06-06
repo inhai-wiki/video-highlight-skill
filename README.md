@@ -35,6 +35,18 @@ Compatible with Agent frameworks that support GitHub Skill installation, includi
 
 Example: a 20-second product video is split into 3 highlight clips.
 
+### Original input video
+
+<p align="center">
+  <a href="examples/demo-input/original-product-video.mp4">
+    <img src="examples/demo-input/original-product-video.gif" alt="Original product video input demo" width="260" />
+  </a>
+  <br />
+  <sub>20-second source video. Click the preview to open the MP4.</sub>
+</p>
+
+### Highlight clips
+
 <table>
   <tr>
     <td width="33%" valign="top">
