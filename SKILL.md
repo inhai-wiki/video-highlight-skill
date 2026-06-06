@@ -45,7 +45,7 @@ Use this skill to convert a long video into a structured content product: highli
 
 8. Generate a recap page.
    - Run `scripts/video_highlight.py page --plan <workdir>/clip_plan.json --clips-dir <workdir>/clips --source-video <video> --copy-media --output <workdir>/site/index.html`.
-   - The page uses a watch layout: main player on the left, scrollable highlight playlist on the right, and current clip details under the player.
+   - The page uses a watch layout: main player on the left, scrollable highlight playlist with video previews on the right, and current clip details under the player.
    - Return `<workdir>/site/index.html`, generated clips, and any limitations.
 
 ## Model Output Contract
@@ -112,7 +112,7 @@ This creates:
 - `<workdir>/site/media/source-<video-name>`
 - `<workdir>/site/media/clips/*.mp4`
 
-The generated page uses a minimal black-and-white visual system: white background, black text, thin borders, compact playlist items, and no decorative gradients. The first screen uses a YouTube-like watch layout with a main player on the left and a scrollable highlight list on the right. Clicking a highlight switches the main player to that clip. The page also keeps an original-video action for timestamp review.
+The generated page uses a minimal black-and-white visual system: white background, black text, thin borders, compact playlist items, and no decorative gradients. The first screen uses a YouTube-like watch layout with a main player on the left and a scrollable highlight list on the right. Each playlist item includes a video preview. Clicking a highlight switches the main player to that clip. The page also keeps an original-video action for timestamp review and GitHub links for downloading the skill.
 
 ## Quality Checks
 

@@ -414,7 +414,10 @@ def cmd_page(args):
             data-quote="{html.escape(str(item.get('quote', '')), quote=True)}"
             data-takeaways="{html.escape(json.dumps(item.get('takeaways') or [], ensure_ascii=False), quote=True)}"
             data-tags="{html.escape(json.dumps(item.get('tags') or [], ensure_ascii=False), quote=True)}">
-            <span class="playlist-index">{index:02d}</span>
+            <span class="playlist-preview">
+              <video muted playsinline preload="metadata" src="{html.escape(rel, quote=True)}"></video>
+              <span class="playlist-index">{index:02d}</span>
+            </span>
             <span class="playlist-copy">
               <strong>{html.escape(str(item.get('title', f'Clip {index}')))}</strong>
               <span>{html.escape(duration)} · Score {html.escape(str(item.get('score', '')))}</span>
@@ -436,6 +439,7 @@ def cmd_page(args):
         highlight_count=len(get_highlights(plan)),
         scenario=html.escape(str(plan.get("scenario", "highlight"))),
         report=report,
+        github_url="https://github.com/inhai-wiki/video-highlight-skill",
     )
     out.write_text(doc, encoding="utf-8")
     print(f"Wrote page to {out}")
@@ -495,6 +499,23 @@ PAGE_TEMPLATE = """<!doctype html>
       font-size: 13px;
     }}
     .brand {{ color: var(--text); font-weight: 700; }}
+    .nav-actions {{
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }}
+    .github-link {{
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--text);
+      font-weight: 650;
+    }}
+    .github-link svg {{ width: 16px; height: 16px; }}
     main {{
       max-width: 1440px;
       margin: 0 auto;
@@ -666,7 +687,7 @@ PAGE_TEMPLATE = """<!doctype html>
     .playlist-item {{
       width: 100%;
       display: grid;
-      grid-template-columns: 38px minmax(0, 1fr);
+      grid-template-columns: 116px minmax(0, 1fr);
       gap: 10px;
       padding: 10px;
       border: 1px solid transparent;
@@ -682,17 +703,37 @@ PAGE_TEMPLATE = """<!doctype html>
       border-color: var(--line);
       background: var(--subtle);
     }}
-    .playlist-index {{
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
+    .playlist-preview {{
+      position: relative;
+      display: block;
+      width: 116px;
+      height: 74px;
+      overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 8px;
-      color: var(--muted);
+      background: #050505;
+    }}
+    .playlist-preview video {{
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }}
+    .playlist-index {{
+      position: absolute;
+      left: 6px;
+      bottom: 6px;
+      width: 28px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.36);
+      border-radius: 6px;
+      color: #ffffff;
       font-size: 12px;
       font-weight: 700;
-      background: var(--panel);
+      background: rgba(0, 0, 0, 0.72);
     }}
     .playlist-copy {{
       min-width: 0;
@@ -748,6 +789,21 @@ PAGE_TEMPLATE = """<!doctype html>
     .notes ul {{ margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.6; }}
     .notes li + li {{ margin-top: 8px; }}
     .notes li span {{ display: block; color: var(--soft); font-size: 12px; margin-top: 2px; }}
+    footer {{
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 min(3vw, 36px) 44px;
+      color: var(--muted);
+      font-size: 14px;
+    }}
+    .footer-inner {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }}
     @media (max-width: 980px) {{
       .page-title {{ grid-template-columns: 1fr; }}
       .stats {{ justify-content: start; }}
@@ -760,8 +816,12 @@ PAGE_TEMPLATE = """<!doctype html>
     @media (max-width: 640px) {{
       header {{ padding-left: 18px; padding-right: 18px; }}
       main {{ padding-left: 14px; padding-right: 14px; }}
-      .nav {{ display: block; }}
+      .nav {{ align-items: flex-start; }}
+      .nav-actions {{ justify-content: flex-end; flex-wrap: wrap; }}
       .player-frame video {{ min-height: 240px; }}
+      .playlist-item {{ grid-template-columns: 96px minmax(0, 1fr); }}
+      .playlist-preview {{ width: 96px; height: 64px; }}
+      .footer-inner {{ display: block; }}
     }}
   </style>
 </head>
@@ -769,7 +829,15 @@ PAGE_TEMPLATE = """<!doctype html>
   <header>
     <div class="nav">
       <div class="brand">Video Recap</div>
-      <div>Generated highlight analysis</div>
+      <div class="nav-actions">
+        <span>Generated highlight analysis</span>
+        <a class="github-link" href="{github_url}" target="_blank" rel="noreferrer" aria-label="Open GitHub repository">
+          <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.69 0 8.24c0 3.64 2.29 6.72 5.47 7.81.4.08.55-.18.55-.4 0-.2-.01-.85-.01-1.54-2.01.38-2.53-.5-2.69-.96-.09-.24-.48-.96-.82-1.15-.28-.15-.68-.52-.01-.53.63-.01 1.08.6 1.23.85.72 1.25 1.87.9 2.33.69.07-.54.28-.9.51-1.11-1.78-.21-3.64-.92-3.64-4.06 0-.9.31-1.63.82-2.2-.08-.21-.36-1.05.08-2.17 0 0 .67-.22 2.2.84A7.34 7.34 0 0 1 8 4.03c.68 0 1.36.09 2 .28 1.53-1.06 2.2-.84 2.2-.84.44 1.12.16 1.96.08 2.17.51.57.82 1.3.82 2.2 0 3.15-1.87 3.85-3.65 4.06.29.26.54.76.54 1.54 0 1.11-.01 2-.01 2.28 0 .22.15.48.55.4A8.18 8.18 0 0 0 16 8.24C16 3.69 12.42 0 8 0Z"/>
+          </svg>
+          GitHub
+        </a>
+      </div>
     </div>
   </header>
   <main>
@@ -815,6 +883,12 @@ PAGE_TEMPLATE = """<!doctype html>
       </aside>
     </section>
   </main>
+  <footer>
+    <div class="footer-inner">
+      <span>Built with Video Highlight Skill.</span>
+      <a class="github-link" href="{github_url}" target="_blank" rel="noreferrer">Download on GitHub</a>
+    </div>
+  </footer>
   <script>
     const mainVideo = document.getElementById('mainVideo');
     const activeBadge = document.getElementById('activeBadge');
