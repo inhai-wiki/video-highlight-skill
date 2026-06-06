@@ -114,6 +114,27 @@ def render_takeaways(takeaways):
     return f'<ul class="takeaways">{items}</ul>'
 
 
+def render_active_details(item, start, end, clip_src):
+    tags = render_tags(item.get("tags") or [])
+    takeaways = render_takeaways(item.get("takeaways") or [])
+    quote = item.get("quote")
+    quote_markup = f"<blockquote>{html.escape(str(quote))}</blockquote>" if quote else ""
+    return f"""
+      <div class="active-meta">
+        <span>{html.escape(format_seconds(start))} - {html.escape(format_seconds(end))}</span>
+        <span>Score {html.escape(str(item.get('score', '')))}</span>
+      </div>
+      {quote_markup}
+      <p class="reason">{html.escape(str(item.get('reason', '')))}</p>
+      {takeaways}
+      {tags}
+      <div class="active-actions">
+        <a href="{html.escape(clip_src, quote=True)}" download>Download clip</a>
+        <button class="source-jump-button" type="button" data-start="{html.escape(str(start), quote=True)}">Play in original</button>
+      </div>
+    """
+
+
 def render_report(plan):
     report = plan.get("report") or {}
     key_points = report.get("key_points") or []
@@ -343,39 +364,22 @@ def cmd_page(args):
     media_dir = out.parent / args.media_dir
     title = plan.get("source_title") or "Video Recap"
     summary = plan.get("summary") or ""
-    source_video_markup = ""
+    source_rel = ""
     if args.source_video:
         source_path = Path(args.source_video)
         if args.copy_media:
             source_path = copy_media_file(source_path, media_dir, prefix="source-")
-        source_rel = html.escape(relative_url(source_path, out.parent))
-        source_video_markup = f"""
-        <section class="source-shell">
-          <div class="source-video">
-            <video id="sourceVideo" controls preload="metadata" src="{source_rel}"></video>
-          </div>
-          <aside class="source-notes">
-            <span class="eyebrow">Original Video</span>
-            <h2>{html.escape(str(title))}</h2>
-            <p>{html.escape(str(summary))}</p>
-            <div class="source-stats">
-              <div><strong>{len(get_highlights(plan))}</strong><span>highlights</span></div>
-              <div><strong>{html.escape(str(plan.get('scenario', 'highlight')))}</strong><span>scenario</span></div>
-            </div>
-          </aside>
-        </section>
-        """
+        source_rel = relative_url(source_path, out.parent)
+    playlist = []
+    active_details = ""
+    initial_src = source_rel
+    initial_badge = "Original Video" if source_rel else "Highlight"
+    initial_title = title
+    initial_summary = summary
+    if source_rel:
+        active_details = '<p class="reason">Select a highlight from the right playlist to load it in the main player.</p>'
     else:
-        source_video_markup = f"""
-        <section class="source-shell no-source">
-          <aside class="source-notes wide">
-            <span class="eyebrow">Video Recap</span>
-            <h2>{html.escape(str(title))}</h2>
-            <p>{html.escape(str(summary))}</p>
-          </aside>
-        </section>
-        """
-    cards = []
+        active_details = ""
     for index, item in enumerate(get_highlights(plan), start=1):
         start = parse_time(item.get("start"))
         end = parse_time(item.get("end"))
@@ -390,42 +394,47 @@ def cmd_page(args):
             original_srt = (clips_dir / expected.name).with_suffix(".srt")
             if original_srt.exists() and not srt.exists():
                 copy_media_file(original_srt, media_dir / "clips")
-        rel = html.escape(relative_url(expected, out.parent))
-        tags = render_tags(item.get("tags") or [])
-        takeaways = render_takeaways(item.get("takeaways") or [])
-        quote = item.get("quote")
-        quote_markup = f"<blockquote>{html.escape(str(quote))}</blockquote>" if quote else ""
-        subtitle_count = len(item.get("subtitles") or [])
-        subtitle_note = f"<span>{subtitle_count} subtitle lines</span>" if subtitle_count else ""
-        card = f"""
-        <article class="clip-card">
-          <div class="clip-index">{index:02d}</div>
-          <div class="clip-media">
-            <video controls preload="metadata" src="{rel}"></video>
-          </div>
-          <div class="clip-body">
-            <div class="meta">
-              <span>{html.escape(format_seconds(start))} - {html.escape(format_seconds(end))}</span>
-              <span>Score {html.escape(str(item.get('score', '')))}</span>
-              {subtitle_note}
-            </div>
-            <h2>{html.escape(str(item.get('title', f'Clip {index}')))}</h2>
-            <p>{html.escape(str(item.get('summary', '')))}</p>
-            {quote_markup}
-            <p class="reason">{html.escape(str(item.get('reason', '')))}</p>
-            {takeaways}
-            {tags}
-            <button class="jump-button" type="button" data-start="{html.escape(str(start))}">Play this moment in original</button>
-          </div>
-        </article>
-        """
-        cards.append(card)
+        rel = relative_url(expected, out.parent)
+        if not initial_src:
+            initial_src = rel
+            initial_title = item.get("title", f"Clip {index}")
+            initial_summary = item.get("summary", "")
+        if not active_details:
+            active_details = render_active_details(item, start, end, rel)
+        duration = f"{format_seconds(start)} - {format_seconds(end)}"
+        playlist.append(f"""
+          <button class="playlist-item{' active' if not source_rel and index == 1 else ''}" type="button"
+            data-src="{html.escape(rel, quote=True)}"
+            data-title="{html.escape(str(item.get('title', f'Clip {index}')), quote=True)}"
+            data-summary="{html.escape(str(item.get('summary', '')), quote=True)}"
+            data-start="{html.escape(str(start), quote=True)}"
+            data-end="{html.escape(str(end), quote=True)}"
+            data-score="{html.escape(str(item.get('score', '')), quote=True)}"
+            data-reason="{html.escape(str(item.get('reason', '')), quote=True)}"
+            data-quote="{html.escape(str(item.get('quote', '')), quote=True)}"
+            data-takeaways="{html.escape(json.dumps(item.get('takeaways') or [], ensure_ascii=False), quote=True)}"
+            data-tags="{html.escape(json.dumps(item.get('tags') or [], ensure_ascii=False), quote=True)}">
+            <span class="playlist-index">{index:02d}</span>
+            <span class="playlist-copy">
+              <strong>{html.escape(str(item.get('title', f'Clip {index}')))}</strong>
+              <span>{html.escape(duration)} · Score {html.escape(str(item.get('score', '')))}</span>
+              <small>{html.escape(str(item.get('summary', '')))}</small>
+            </span>
+          </button>
+        """)
     report = render_report(plan)
     doc = PAGE_TEMPLATE.format(
         title=html.escape(str(title)),
         summary=html.escape(str(summary)),
-        source_video=source_video_markup,
-        cards="\n".join(cards),
+        source_video=html.escape(source_rel, quote=True),
+        initial_src=html.escape(initial_src, quote=True),
+        initial_badge=html.escape(initial_badge),
+        initial_title=html.escape(str(initial_title)),
+        initial_summary=html.escape(str(initial_summary)),
+        active_details=active_details,
+        playlist="\n".join(playlist),
+        highlight_count=len(get_highlights(plan)),
+        scenario=html.escape(str(plan.get("scenario", "highlight"))),
         report=report,
     )
     out.write_text(doc, encoding="utf-8")
@@ -456,9 +465,9 @@ PAGE_TEMPLATE = """<!doctype html>
       --muted: #666666;
       --soft: #8a8a8a;
       --line: #e5e5e5;
-      --accent: #000000;
       --panel: #ffffff;
       --subtle: #f5f5f5;
+      --inverse: #ffffff;
     }}
     * {{ box-sizing: border-box; }}
     body {{
@@ -467,117 +476,116 @@ PAGE_TEMPLATE = """<!doctype html>
       background: var(--bg);
       color: var(--text);
     }}
-    a {{ color: inherit; }}
+    a {{ color: inherit; text-decoration: none; }}
     header {{
-      padding: 28px min(6vw, 72px) 20px;
+      padding: 18px min(4vw, 52px);
       border-bottom: 1px solid var(--line);
-      background: var(--panel);
+      background: rgba(255, 255, 255, 0.92);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
     }}
     .nav {{
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      font-size: 13px;
       color: var(--muted);
+      font-size: 13px;
     }}
-    .brand {{
-      color: var(--text);
+    .brand {{ color: var(--text); font-weight: 700; }}
+    main {{
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 22px min(3vw, 36px) 48px;
+    }}
+    .page-title {{
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 18px;
+    }}
+    h1 {{
+      margin: 0 0 8px;
+      max-width: 900px;
+      font-size: clamp(28px, 4vw, 56px);
+      line-height: 1;
+      letter-spacing: 0;
+    }}
+    .summary {{
+      margin: 0;
+      max-width: 880px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }}
+    .stats {{
+      display: flex;
+      gap: 8px;
+      justify-content: end;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
       font-weight: 650;
     }}
-    h1 {{ margin: 24px 0 10px; max-width: 920px; font-size: clamp(34px, 5vw, 72px); line-height: 0.98; letter-spacing: 0; }}
-    .summary {{ max-width: 860px; color: var(--muted); line-height: 1.65; font-size: 17px; }}
-    main {{ max-width: 1240px; margin: 0 auto; padding: 24px 20px 56px; }}
-    .source-shell {{
+    .stats span {{
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+    }}
+    .watch-layout {{
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 360px;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
       gap: 18px;
-      align-items: stretch;
-      margin: 6px 0 36px;
+      align-items: start;
     }}
-    .source-shell.no-source {{
-      grid-template-columns: 1fr;
+    .player-column {{ min-width: 0; }}
+    .player-frame {{
+      border: 1px solid #111111;
+      border-radius: 8px;
+      background: #050505;
+      overflow: hidden;
     }}
-    .source-video,
-    .source-notes,
-    .clip-card,
-    .notes {{
+    .player-frame video {{
+      display: block;
+      width: 100%;
+      height: min(68vh, 760px);
+      min-height: 420px;
+      background: #050505;
+      object-fit: contain;
+    }}
+    .active-panel {{
+      margin-top: 14px;
+      padding: 18px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
     }}
-    .source-video {{ padding: 10px; }}
-    .source-video video {{ display: block; }}
-    .source-notes {{
-      padding: 22px;
+    .active-meta {{
       display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 260px;
-    }}
-    .source-notes.wide {{ min-height: 180px; }}
-    .eyebrow {{
-      display: inline-flex;
-      width: max-content;
-      padding: 4px 8px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
+      flex-wrap: wrap;
+      gap: 8px;
       color: var(--muted);
       font-size: 12px;
       font-weight: 650;
-      text-transform: uppercase;
+    }}
+    .active-meta span,
+    .tags span {{
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--subtle);
+    }}
+    h2 {{
+      margin: 10px 0 8px;
+      font-size: 24px;
+      line-height: 1.2;
       letter-spacing: 0;
     }}
-    .source-notes h2 {{ margin: 18px 0 8px; font-size: 24px; line-height: 1.15; letter-spacing: 0; }}
-    .source-notes p {{ margin: 0; }}
-    .source-stats {{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 22px;
-    }}
-    .source-stats div {{
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--subtle);
-    }}
-    .source-stats strong {{ display: block; font-size: 22px; }}
-    .source-stats span {{ color: var(--soft); font-size: 12px; }}
-    .section-heading {{
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      gap: 14px;
-      margin-bottom: 14px;
-    }}
-    .section-heading h2 {{ margin: 0; font-size: 28px; letter-spacing: 0; }}
-    .section-heading p {{ margin: 0; max-width: 520px; color: var(--muted); font-size: 14px; }}
-    .clip-card {{
-      display: grid;
-      grid-template-columns: 52px minmax(280px, 42%) 1fr;
-      gap: 18px;
-      margin-bottom: 18px;
-      padding: 12px;
-    }}
-    .clip-index {{
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 700;
-      background: var(--subtle);
-    }}
-    video {{ width: 100%; aspect-ratio: 16 / 9; background: #050505; border-radius: 6px; }}
-    .clip-body {{ padding: 4px 4px 4px 0; }}
-    .meta {{ display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 12px; font-weight: 650; }}
-    .meta span {{ padding: 3px 7px; border: 1px solid var(--line); border-radius: 999px; background: var(--subtle); }}
-    h2 {{ margin: 8px 0; font-size: 22px; letter-spacing: 0; }}
-    p {{ line-height: 1.6; color: var(--muted); }}
+    p {{ color: var(--muted); line-height: 1.62; }}
     .reason {{ color: var(--text); }}
     blockquote {{
       margin: 14px 0;
@@ -593,47 +601,167 @@ PAGE_TEMPLATE = """<!doctype html>
       color: var(--muted);
       line-height: 1.55;
     }}
-    .tags {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }}
-    .tags span {{
-      padding: 4px 8px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
+    .tags {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0;
       color: var(--muted);
       font-size: 12px;
-      background: var(--panel);
     }}
-    .jump-button {{
+    .active-actions {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }}
+    .active-actions a,
+    .active-actions button,
+    .original-button {{
       appearance: none;
       border: 1px solid var(--text);
       border-radius: 6px;
       background: var(--text);
-      color: #ffffff;
+      color: var(--inverse);
       padding: 9px 12px;
       font: inherit;
       font-size: 13px;
       font-weight: 650;
       cursor: pointer;
     }}
-    .jump-button:hover {{ background: #333333; }}
+    .active-actions button.secondary,
+    .original-button {{
+      background: var(--panel);
+      color: var(--text);
+    }}
+    .playlist-shell {{
+      position: sticky;
+      top: 78px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }}
+    .playlist-head {{
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+    }}
+    .playlist-head h2 {{
+      margin: 0;
+      font-size: 18px;
+    }}
+    .playlist-head span {{
+      color: var(--muted);
+      font-size: 12px;
+    }}
+    .playlist {{
+      max-height: calc(100vh - 168px);
+      overflow: auto;
+      padding: 8px;
+    }}
+    .playlist-item {{
+      width: 100%;
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }}
+    .playlist-item + .playlist-item {{ margin-top: 6px; }}
+    .playlist-item:hover,
+    .playlist-item.active {{
+      border-color: var(--line);
+      background: var(--subtle);
+    }}
+    .playlist-index {{
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--panel);
+    }}
+    .playlist-copy {{
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }}
+    .playlist-copy strong {{
+      overflow: hidden;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }}
+    .playlist-copy span {{
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }}
+    .playlist-copy small {{
+      display: -webkit-box;
+      overflow: hidden;
+      color: var(--soft);
+      font-size: 12px;
+      line-height: 1.4;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }}
+    .report-drawer {{
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }}
+    .report-drawer summary {{
+      cursor: pointer;
+      padding: 14px 16px;
+      font-weight: 650;
+    }}
     .notes-grid {{
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
-      margin-top: 28px;
+      gap: 14px;
+      padding: 0 16px 16px;
     }}
-    .notes {{ padding: 18px; }}
-    .notes h2 {{ margin: 0 0 12px; font-size: 18px; }}
+    .notes {{
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--subtle);
+    }}
+    .notes h2 {{ margin: 0 0 12px; font-size: 16px; }}
     .notes ul {{ margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.6; }}
-    .notes li + li {{ margin-top: 10px; }}
+    .notes li + li {{ margin-top: 8px; }}
     .notes li span {{ display: block; color: var(--soft); font-size: 12px; margin-top: 2px; }}
-    @media (max-width: 760px) {{
-      header {{ padding-left: 20px; padding-right: 20px; }}
-      .source-shell {{ grid-template-columns: 1fr; }}
-      .clip-card {{ grid-template-columns: 1fr; }}
-      .clip-index {{ width: 100%; height: 34px; }}
-      .clip-body {{ padding: 0; }}
-      .section-heading {{ display: block; }}
+    @media (max-width: 980px) {{
+      .page-title {{ grid-template-columns: 1fr; }}
+      .stats {{ justify-content: start; }}
+      .watch-layout {{ grid-template-columns: 1fr; }}
+      .playlist-shell {{ position: static; }}
+      .playlist {{ max-height: 360px; }}
+      .player-frame video {{ height: min(62vh, 620px); min-height: 320px; }}
       .notes-grid {{ grid-template-columns: 1fr; }}
+    }}
+    @media (max-width: 640px) {{
+      header {{ padding-left: 18px; padding-right: 18px; }}
+      main {{ padding-left: 14px; padding-right: 14px; }}
+      .nav {{ display: block; }}
+      .player-frame video {{ min-height: 240px; }}
     }}
   </style>
 </head>
@@ -643,28 +771,157 @@ PAGE_TEMPLATE = """<!doctype html>
       <div class="brand">Video Recap</div>
       <div>Generated highlight analysis</div>
     </div>
-    <h1>{title}</h1>
-    <div class="summary">{summary}</div>
   </header>
   <main>
-    {source_video}
-    <section class="section-heading">
-      <h2>Highlights</h2>
-      <p>Each segment includes the generated clip, source timestamp, selection reason, and analysis notes.</p>
+    <section class="page-title">
+      <div>
+        <h1>{title}</h1>
+        <p class="summary">{summary}</p>
+      </div>
+      <div class="stats">
+        <span>{highlight_count} highlights</span>
+        <span>{scenario}</span>
+      </div>
     </section>
-    {cards}
-    {report}
+    <section class="watch-layout">
+      <div class="player-column">
+        <div class="player-frame">
+          <video id="mainVideo" controls preload="metadata" src="{initial_src}"></video>
+        </div>
+        <section class="active-panel">
+          <div class="active-meta">
+            <span id="activeBadge">{initial_badge}</span>
+          </div>
+          <h2 id="activeTitle">{initial_title}</h2>
+          <p id="activeSummary">{initial_summary}</p>
+          <div id="activeDetails">{active_details}</div>
+        </section>
+        <details class="report-drawer">
+          <summary>View structured report</summary>
+          {report}
+        </details>
+      </div>
+      <aside class="playlist-shell">
+        <div class="playlist-head">
+          <div>
+            <h2>Highlights</h2>
+            <span>Click a segment to load it in the main player.</span>
+          </div>
+          <button class="original-button" id="originalButton" type="button">Original</button>
+        </div>
+        <div class="playlist">
+          {playlist}
+        </div>
+      </aside>
+    </section>
   </main>
   <script>
-    const sourceVideo = document.getElementById('sourceVideo');
-    document.querySelectorAll('[data-start]').forEach((button) => {{
+    const mainVideo = document.getElementById('mainVideo');
+    const activeBadge = document.getElementById('activeBadge');
+    const activeTitle = document.getElementById('activeTitle');
+    const activeSummary = document.getElementById('activeSummary');
+    const activeDetails = document.getElementById('activeDetails');
+    const originalButton = document.getElementById('originalButton');
+    const sourceSrc = "{source_video}";
+    const sourceTitle = "{title}";
+    const sourceSummary = "{summary}";
+
+    function escapeHtml(value) {{
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }}
+
+    function parseList(value) {{
+      try {{
+        const parsed = JSON.parse(value || '[]');
+        return Array.isArray(parsed) ? parsed : [];
+      }} catch {{
+        return [];
+      }}
+    }}
+
+    function setVideo(src, start = 0, play = true) {{
+      if (!src) return;
+      const shouldReload = mainVideo.getAttribute('src') !== src;
+      if (shouldReload) {{
+        mainVideo.setAttribute('src', src);
+        mainVideo.load();
+      }}
+      const seek = () => {{
+        mainVideo.currentTime = Number(start || 0);
+        if (play) mainVideo.play();
+      }};
+      if (shouldReload) {{
+        mainVideo.addEventListener('loadedmetadata', seek, {{ once: true }});
+      }} else {{
+        seek();
+      }}
+    }}
+
+    function renderDetails(button) {{
+      const takeaways = parseList(button.dataset.takeaways);
+      const tags = parseList(button.dataset.tags);
+      const quote = button.dataset.quote || '';
+      const start = button.dataset.start || '0';
+      const end = button.dataset.end || '';
+      const clipSrc = button.dataset.src || '';
+      const takeawaysHtml = takeaways.length
+        ? `<ul class="takeaways">${{takeaways.map((item) => `<li>${{escapeHtml(item)}}</li>`).join('')}}</ul>`
+        : '';
+      const tagsHtml = tags.length
+        ? `<div class="tags">${{tags.map((item) => `<span>${{escapeHtml(item)}}</span>`).join('')}}</div>`
+        : '';
+      activeDetails.innerHTML = `
+        <div class="active-meta">
+          <span>${{escapeHtml(start)}}s - ${{escapeHtml(end)}}s</span>
+          <span>Score ${{escapeHtml(button.dataset.score)}}</span>
+        </div>
+        ${{quote ? `<blockquote>${{escapeHtml(quote)}}</blockquote>` : ''}}
+        <p class="reason">${{escapeHtml(button.dataset.reason)}}</p>
+        ${{takeawaysHtml}}
+        ${{tagsHtml}}
+        <div class="active-actions">
+          <a href="${{escapeHtml(clipSrc)}}" download>Download clip</a>
+          <button class="source-jump-button secondary" type="button" data-start="${{escapeHtml(start)}}">Play in original</button>
+        </div>
+      `;
+    }}
+
+    document.querySelectorAll('.playlist-item').forEach((button) => {{
       button.addEventListener('click', () => {{
-        if (!sourceVideo) return;
-        sourceVideo.currentTime = Number(button.dataset.start || 0);
-        sourceVideo.play();
-        sourceVideo.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+        document.querySelectorAll('.playlist-item').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        activeBadge.textContent = 'Highlight';
+        activeTitle.textContent = button.dataset.title || 'Highlight';
+        activeSummary.textContent = button.dataset.summary || '';
+        renderDetails(button);
+        setVideo(button.dataset.src, 0, true);
       }});
     }});
+
+    document.addEventListener('click', (event) => {{
+      const button = event.target.closest('.source-jump-button');
+      if (!button || !sourceSrc) return;
+      activeBadge.textContent = 'Original Video';
+      setVideo(sourceSrc, Number(button.dataset.start || 0), true);
+    }});
+
+    originalButton.addEventListener('click', () => {{
+      if (!sourceSrc) return;
+      document.querySelectorAll('.playlist-item').forEach((item) => item.classList.remove('active'));
+      activeBadge.textContent = 'Original Video';
+      activeTitle.textContent = sourceTitle;
+      activeSummary.textContent = sourceSummary;
+      setVideo(sourceSrc, 0, true);
+    }});
+
+    if (!sourceSrc) {{
+      originalButton.hidden = true;
+    }}
   </script>
 </body>
 </html>
