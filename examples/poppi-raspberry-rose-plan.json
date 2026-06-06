@@ -1,0 +1,139 @@
+{
+  "scenario": "highlight",
+  "source_title": "Poppi Raspberry Rose Short Ad",
+  "summary": "A 20-second vertical social video built around a creator tasting Poppi Raspberry Rose. The structure moves from a skeptical hook, to quick product claims around sugar and prebiotics, then to a positive taste reaction and final purchase prompt.",
+  "segments": [
+    {
+      "start": 0,
+      "end": 5.2,
+      "title": "Skeptical hook",
+      "summary": "The creator reacts to the product with surprise, calls out aggressive marketing, and signals curiosity.",
+      "visuals": ["creator on couch", "pink can appears", "reaction close-up"],
+      "topics": ["hook", "skepticism"],
+      "importance": 4
+    },
+    {
+      "start": 5.2,
+      "end": 12.4,
+      "title": "Product claims",
+      "summary": "The video moves into benefits: raspberry rose flavor, five grams of sugar, and prebiotics for gut health.",
+      "visuals": ["creator holds can", "wide couch shot", "product close-up"],
+      "topics": ["low sugar", "prebiotics", "flavor"],
+      "importance": 5
+    },
+    {
+      "start": 12.4,
+      "end": 20.1,
+      "title": "Taste validation and CTA",
+      "summary": "The creator tastes the drink, says it is actually good, shows the can close to camera, and ends with a direct recommendation.",
+      "visuals": ["drinking moment", "can close-up", "creator pushes can toward camera"],
+      "topics": ["taste reaction", "call to action"],
+      "importance": 5
+    }
+  ],
+  "highlights": [
+    {
+      "start": 0,
+      "end": 5.2,
+      "title": "Skepticism turns into curiosity",
+      "summary": "A strong opening hook: the creator reacts with surprise, calls the marketing aggressive, then decides to keep listening.",
+      "reason": "This is the attention-grabbing setup that frames the rest of the ad.",
+      "score": 82,
+      "tags": ["hook", "creator reaction", "social ad"],
+      "quote": "Okay, aggressive marketing, but I'm listening.",
+      "takeaways": [
+        "The clip quickly establishes skepticism, which makes the later endorsement feel more conversational.",
+        "The product enters the frame early, so the viewer knows what the story is about."
+      ],
+      "subtitles": [
+        {
+          "start": 2.0,
+          "end": 4.3,
+          "text": "Okay, aggressive marketing, but"
+        },
+        {
+          "start": 4.3,
+          "end": 5.2,
+          "text": "I'm listening."
+        }
+      ]
+    },
+    {
+      "start": 5.2,
+      "end": 12.4,
+      "title": "Benefit stack in one beat",
+      "summary": "The creator highlights the raspberry rose flavor, five grams of sugar, and prebiotic gut-health angle while holding the can clearly on camera.",
+      "reason": "This segment contains the clearest product-value information and is useful as a standalone product explainer.",
+      "score": 90,
+      "tags": ["product benefit", "low sugar", "prebiotics"],
+      "quote": "Raspberry rose, only five grams of sugar, prebiotic stuff for my gut?",
+      "takeaways": [
+        "The strongest factual product claims live in this middle section.",
+        "The can remains visible, giving the clip clear brand and packaging recall."
+      ],
+      "subtitles": [
+        {
+          "start": 6.0,
+          "end": 8.4,
+          "text": "Raspberry rose, only five grams of sugar,"
+        },
+        {
+          "start": 8.4,
+          "end": 11.5,
+          "text": "prebiotic stuff for my gut? I mean, okay."
+        }
+      ]
+    },
+    {
+      "start": 12.4,
+      "end": 20.1,
+      "title": "Taste proof and direct recommendation",
+      "summary": "After tasting it, the creator says the drink is actually fire, shows the can close-up, and ends with a clear recommendation to grab a case.",
+      "reason": "This is the conversion moment: taste validation, product close-up, and call to action in one continuous beat.",
+      "score": 94,
+      "tags": ["taste test", "CTA", "product close-up"],
+      "quote": "Soda's back, and it's finally not garbage.",
+      "takeaways": [
+        "The taste reaction resolves the skepticism introduced at the start.",
+        "The closing line is the most reusable quote for social cuts or recap copy."
+      ],
+      "subtitles": [
+        {
+          "start": 13.0,
+          "end": 15.8,
+          "text": "Wait, that's actually fire. Like, it's not even that soda-y."
+        },
+        {
+          "start": 16.8,
+          "end": 18.5,
+          "text": "Seriously though, go grab a case."
+        },
+        {
+          "start": 18.5,
+          "end": 20.1,
+          "text": "Soda's back, and it's finally not garbage."
+        }
+      ]
+    }
+  ],
+  "report": {
+    "key_points": [
+      "The ad follows a classic short-form structure: skeptical hook, benefit stack, taste validation, call to action.",
+      "The strongest reusable highlight is the final taste proof and CTA segment.",
+      "The middle segment is best for explaining the product claims."
+    ],
+    "claims_to_verify": [
+      {
+        "claim": "The drink has five grams of sugar.",
+        "timestamp": 6.8,
+        "verification_status": "not_checked"
+      },
+      {
+        "claim": "The drink contains prebiotics.",
+        "timestamp": 9.0,
+        "verification_status": "not_checked"
+      }
+    ],
+    "action_items": []
+  }
+}

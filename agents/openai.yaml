@@ -1,0 +1,7 @@
+interface:
+  display_name: "Video Highlight Skill"
+  short_description: "Analyze long videos and produce highlight recaps."
+  default_prompt: "Use $video-highlight-skill to analyze a long video, select highlights, cut clips, and generate a recap package."
+
+policy:
+  allow_implicit_invocation: true

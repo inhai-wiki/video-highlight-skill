@@ -1,0 +1,39 @@
+{
+  "scenario": "highlight",
+  "source_title": "Sample Long Video",
+  "summary": "A sample recap plan used to verify the skill scripts.",
+  "segments": [
+    {
+      "start": 0,
+      "end": 120,
+      "title": "Opening",
+      "summary": "The speaker introduces the topic.",
+      "visuals": ["speaker", "slides"],
+      "topics": ["overview"],
+      "importance": 2
+    }
+  ],
+  "highlights": [
+    {
+      "start": 12,
+      "end": 42,
+      "title": "Core demo moment",
+      "summary": "The workflow completes its first visible result.",
+      "reason": "This clip shows the core value clearly.",
+      "score": 91,
+      "tags": ["demo"],
+      "subtitles": [
+        {
+          "start": 12,
+          "end": 16,
+          "text": "Here is the first completed result."
+        }
+      ]
+    }
+  ],
+  "report": {
+    "key_points": ["The workflow can produce reusable outputs."],
+    "claims_to_verify": [],
+    "action_items": []
+  }
+}

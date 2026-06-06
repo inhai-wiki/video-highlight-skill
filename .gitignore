@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.DS_Store
+work/
+output/
+dist/
+site/
+media/
+*.mp4
+*.mov
+*.mkv
+*.wav
+*.aac
+*.mp3
+*.srt
