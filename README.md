@@ -1,6 +1,12 @@
 <div align="center">
   <img src="examples/video-highlight-skill-cover.jpg" alt="Video Highlight Skill cover" width="900" />
   <h1>Video Highlight Skill</h1>
+  <p>
+    <a href="https://platform.stepfun.com/step-plan?channel=AIchanpinyinhai">
+      <img src="https://platform.stepfun.com/_next/image?url=%2Fhome-v2%2Flogo%2FStepFunV2.png&w=256&q=75" alt="StepFun" width="28" />
+      <strong> Sponsor · Step Plan 权益</strong>
+    </a>
+  </p>
   <p><strong>AI video highlight skill for agents: analyze videos, cut clips with FFmpeg, export subtitles, and generate a shareable recap page.</strong></p>
   <p>
     <code>Claude Code</code> · <code>OpenClaw</code> · <code>Codex</code> · <code>Agent Skill</code>
