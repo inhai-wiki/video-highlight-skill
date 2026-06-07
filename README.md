@@ -15,7 +15,11 @@
 
 ## Quick Start
 
+Copy this and send to your AI Agent:
+
+```text
 Read this page and install this skill: [inhai-wiki/video-highlight-skill.git](https://github.com/inhai-wiki/video-highlight-skill.git)
+```
 
 Install the complete repository, including `SKILL.md`, `scripts/`, `references/`, `assets/`, and `agents/`.
 
